@@ -12,4 +12,9 @@ export const VideoRecorder = class VideoRecorder extends BaseRecorder {
 
     return getVideoStream({ audio: !muteRecord });
   }
+
+  showResult = () => {
+    const { mediaUrl } = this.state;
+    return (<video src={mediaUrl} controls></video>);
+  }
 }
