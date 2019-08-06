@@ -1,11 +1,14 @@
 import React, { Component, Fragment } from 'react';
 import { getAudioStream } from '../util/media-devices';
+import { generateSourceUrl } from '../util/blob';
 
 interface IRecorderState {
-  isResultAvailable: boolean;
-  mediaUrl: string;
   isRecording: boolean;
+  isResultAvailable: boolean;
+  isShowingInput: boolean;
+  mediaUrl: string;
   recorder: any; // TODO: Get types for this.
+  currentStream: any;
 }
 
 interface IDataAvailableEvent {
@@ -22,10 +25,12 @@ const DATA_AVAILABLE_INTERVAL = 500;
 
 export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps, IRecorderState> {
   state: IRecorderState = {
-    isResultAvailable: false,
-    mediaUrl: '',
     isRecording: false,
+    isResultAvailable: false,
+    isShowingInput: false,
+    mediaUrl: '',
     recorder: null,
+    currentStream: null,
   };
 
   isSettingMediaRecorder: boolean = false;
@@ -53,9 +58,21 @@ export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps,
       this.isSettingMediaRecorder = true;
 
       return this.getStream()
-        .then(stream => {
+        .then(currentStream => {
           // @ts-ignore -- Check what's up with the types
-          const mediaRecorder = new MediaRecorder(stream);
+          const mediaRecorder = new MediaRecorder(currentStream);
+
+          mediaRecorder.onstart = () => {
+            this.setState({
+              currentStream,
+            }, () => {
+              const { onStart } = this.props;
+  
+              if (onStart) {
+                onStart();
+              }
+            });
+          };
 
           mediaRecorder.ondataavailable = (e: IDataAvailableEvent) => {
             this.audioFragments.push(e.data);
@@ -69,13 +86,7 @@ export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps,
 
           mediaRecorder.onstop = () => {
             const { audioFragments } = this;
-
-            /*
-             * This prevents the 416 error from happening.
-             * This forces the media recorder to create a new Blob when the recording is stopped.
-             */
-            const audioBlob = new Blob(audioFragments, { 'type' : 'audio/ogg; codecs=opus' });
-            const mediaUrl = URL.createObjectURL(audioBlob);
+            const mediaUrl = generateSourceUrl(audioFragments);
 
             this.audioFragments = [];
 
@@ -97,12 +108,6 @@ export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps,
             isRecording: true,
           }, () => {
             mediaRecorder.start(DATA_AVAILABLE_INTERVAL);
-
-            const { onStart } = this.props;
-
-            if (onStart) {
-              onStart();
-            }
           });
         });
     }
@@ -120,6 +125,11 @@ export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps,
     recorder.stop();
   }
 
+  renderRecordingStatus = () => {
+    console.log('This method should be overriden and you should not be using `BaseRecorder`.');
+    return <Fragment/>;
+  }
+
   renderResult = () => {
     const { mediaUrl } = this.state;
 
@@ -135,6 +145,7 @@ export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps,
       <Fragment>
         <h2>Press the button to record your message.</h2>
         <button onClick={this.toggleRecord}>{buttonLabel}</button>
+        {isRecording && this.renderRecordingStatus()}
         {showResult && this.renderResult()}
       </Fragment>
     )
