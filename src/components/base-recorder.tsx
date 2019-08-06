@@ -35,6 +35,7 @@ export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps,
 
   isSettingMediaRecorder: boolean = false;
   audioFragments: any[] = [];
+  previewElement?: HTMLMediaElement;
 
   toggleRecord = () => {
     const { isRecording } = this.state;
@@ -63,6 +64,10 @@ export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps,
           const mediaRecorder = new MediaRecorder(currentStream);
 
           mediaRecorder.onstart = () => {
+            if (this.previewElement) {
+              this.previewElement.srcObject = currentStream;
+            }
+
             this.setState({
               currentStream,
             }, () => {
@@ -125,7 +130,7 @@ export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps,
     recorder.stop();
   }
 
-  renderRecordingStatus = () => {
+  renderPreview = () => {
     console.log('This method should be overriden and you should not be using `BaseRecorder`.');
     return <Fragment/>;
   }
@@ -145,7 +150,7 @@ export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps,
       <Fragment>
         <h2>Press the button to record your message.</h2>
         <button onClick={this.toggleRecord}>{buttonLabel}</button>
-        {isRecording && this.renderRecordingStatus()}
+        {this.renderPreview()}
         {showResult && this.renderResult()}
       </Fragment>
     )
