@@ -12,7 +12,7 @@ interface IDataAvailableEvent {
   data: Blob;
 }
 
-interface IRecorderProps {
+export interface IRecorderProps {
   onStart?: () => {};
   onDataAvailable?: (e: IDataAvailableEvent) => {};
   onStop?: (audioUrl: string, state: IRecorderState) => {};
@@ -20,7 +20,7 @@ interface IRecorderProps {
 
 const DATA_AVAILABLE_INTERVAL = 500;
 
-export const Recorder = class Recorder extends Component<IRecorderProps, IRecorderState> {
+export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps, IRecorderState> {
   state: IRecorderState = {
     audioAvailable: false,
     audioUrl: '',
@@ -41,13 +41,18 @@ export const Recorder = class Recorder extends Component<IRecorderProps, IRecord
     }
   }
 
+  getStream = () => {
+    console.warn('This method should be overwritten. Or use video-recorder or audio-recorder. Returning `getAudioStream` by default.');
+    return getAudioStream();
+  }
+
   record = async () => {
     const { recorder } = this.state;
 
     if (!recorder) {
       this.isSettingMediaRecorder = true;
 
-      return getAudioStream()
+      return this.getStream()
         .then(stream => {
           // @ts-ignore -- Check what's up with the types
           const mediaRecorder = new MediaRecorder(stream);

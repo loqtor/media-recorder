@@ -1,5 +1,5 @@
 import React from 'react';
-import { Recorder } from './components/recorder';
+import { VideoRecorder } from './components/video-recorder';
 
 function App() {
   if (!navigator.mediaDevices) {
@@ -21,7 +21,7 @@ function App() {
   return (
     <div className="App">
       <h1>Recorder Test</h1>
-      <Recorder
+      <VideoRecorder
         onStart={onStart}
         onDataAvailable={onDataAvailable}
         onStop={onStop}
