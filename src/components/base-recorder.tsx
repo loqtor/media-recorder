@@ -2,8 +2,8 @@ import React, { Component, Fragment } from 'react';
 import { getAudioStream } from '../util/media-devices';
 
 interface IRecorderState {
-  audioAvailable: boolean;
-  audioUrl: string;
+  isResultAvailable: boolean;
+  mediaUrl: string;
   isRecording: boolean;
   recorder: any; // TODO: Get types for this.
 }
@@ -15,15 +15,15 @@ interface IDataAvailableEvent {
 export interface IRecorderProps {
   onStart?: () => {};
   onDataAvailable?: (e: IDataAvailableEvent) => {};
-  onStop?: (audioUrl: string, state: IRecorderState) => {};
+  onStop?: (mediaUrl: string, state: IRecorderState) => {};
 }
 
 const DATA_AVAILABLE_INTERVAL = 500;
 
 export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps, IRecorderState> {
   state: IRecorderState = {
-    audioAvailable: false,
-    audioUrl: '',
+    isResultAvailable: false,
+    mediaUrl: '',
     isRecording: false,
     recorder: null,
   };
@@ -75,19 +75,19 @@ export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps,
              * This forces the media recorder to create a new Blob when the recording is stopped.
              */
             const audioBlob = new Blob(audioFragments, { 'type' : 'audio/ogg; codecs=opus' });
-            const audioUrl = URL.createObjectURL(audioBlob);
+            const mediaUrl = URL.createObjectURL(audioBlob);
 
             this.audioFragments = [];
 
             this.setState({
               isRecording: false,
-              audioAvailable: true,
-              audioUrl,
+              isResultAvailable: true,
+              mediaUrl,
             }, () => {
               const { onStop } = this.props;
 
               if (onStop) {
-                onStop(audioUrl, this.state);
+                onStop(mediaUrl, this.state);
               }
             });
           }
@@ -120,18 +120,22 @@ export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps,
     recorder.stop();
   }
 
+  showResult = () => {
+    const { mediaUrl } = this.state;
+
+    return (<audio controls src={mediaUrl}></audio>)
+  }
+
   render() {
-    const { audioAvailable, isRecording, audioUrl } = this.state;
+    const { isResultAvailable, isRecording } = this.state;
     const buttonLabel = isRecording ? 'Stop' : 'Record';
-    const showAudio = audioAvailable && !isRecording;
+    const showResult = isResultAvailable && !isRecording;
 
     return (
       <Fragment>
         <h2>Press the button to record your message.</h2>
         <button onClick={this.toggleRecord}>{buttonLabel}</button>
-        {showAudio && (
-          <audio controls src={audioUrl}></audio>
-        )}
+        {showResult && this.showResult()}
       </Fragment>
     )
   }
