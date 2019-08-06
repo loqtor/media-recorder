@@ -120,7 +120,7 @@ export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps,
     recorder.stop();
   }
 
-  showResult = () => {
+  renderResult = () => {
     const { mediaUrl } = this.state;
 
     return (<audio controls src={mediaUrl}></audio>)
@@ -135,7 +135,7 @@ export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps,
       <Fragment>
         <h2>Press the button to record your message.</h2>
         <button onClick={this.toggleRecord}>{buttonLabel}</button>
-        {showResult && this.showResult()}
+        {showResult && this.renderResult()}
       </Fragment>
     )
   }
