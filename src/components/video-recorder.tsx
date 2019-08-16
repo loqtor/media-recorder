@@ -14,15 +14,17 @@ export const VideoRecorder = class VideoRecorder extends BaseRecorder {
   }
 
   renderPreview = () => {
-    const { isRecording, currentStream } = this.state;
-    const style = isRecording ? {} : { display: 'none'}
+    const { isRecording } = this.state;
+    const style = isRecording ? {} : { display: 'none' };
 
     return (
-    <video 
-      src={currentStream} 
-      ref={(element: HTMLVideoElement) => this.previewElement = element}
-      style={style}
-    />);
+      <video
+        ref={(element: HTMLVideoElement) => this.previewElement = element}
+        style={style}
+        autoPlay
+        muted
+      />
+    );
   }
 
   renderResult = () => {

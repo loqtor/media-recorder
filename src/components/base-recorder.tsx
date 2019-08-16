@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react';
+import React, { Component, Fragment, ReactNode } from 'react';
 import { getAudioStream } from '../util/media-devices';
 import { generateSourceUrl } from '../util/blob';
 
@@ -34,7 +34,7 @@ export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps,
   };
 
   isSettingMediaRecorder: boolean = false;
-  audioFragments: any[] = [];
+  fragments: any[] = [];
   previewElement?: HTMLMediaElement;
 
   toggleRecord = () => {
@@ -60,14 +60,14 @@ export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps,
 
       return this.getStream()
         .then(currentStream => {
+          if (this.previewElement) {
+            this.previewElement.srcObject = currentStream;
+          }
+
           // @ts-ignore -- Check what's up with the types
           const mediaRecorder = new MediaRecorder(currentStream);
 
           mediaRecorder.onstart = () => {
-            if (this.previewElement) {
-              this.previewElement.srcObject = currentStream;
-            }
-
             this.setState({
               currentStream,
             }, () => {
@@ -80,7 +80,7 @@ export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps,
           };
 
           mediaRecorder.ondataavailable = (e: IDataAvailableEvent) => {
-            this.audioFragments.push(e.data);
+            this.fragments.push(e.data);
 
             const { onDataAvailable } = this.props;
 
@@ -90,10 +90,10 @@ export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps,
           }
 
           mediaRecorder.onstop = () => {
-            const { audioFragments } = this;
-            const mediaUrl = generateSourceUrl(audioFragments);
+            const { fragments } = this;
+            const mediaUrl = generateSourceUrl(fragments);
 
-            this.audioFragments = [];
+            this.fragments = [];
 
             this.setState({
               isRecording: false,
@@ -130,7 +130,7 @@ export const BaseRecorder = class BaseRecorder extends Component<IRecorderProps,
     recorder.stop();
   }
 
-  renderPreview = () => {
+  renderPreview = (): ReactNode | null => {
     console.log('This method should be overriden and you should not be using `BaseRecorder`.');
     return <Fragment/>;
   }
